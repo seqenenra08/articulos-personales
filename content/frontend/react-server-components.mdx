@@ -1,0 +1,94 @@
+---
+title: "React Server Components: Modelo Mental"
+area: frontend
+difficulty: 4
+concepts: [RSC, streaming, server components, hydration]
+status: published
+date: "2026-02-25"
+description: "Los React Server Components cambian fundamentalmente cómo pensamos sobre la división cliente/servidor en aplicaciones web."
+---
+
+# El Problema que Resuelven
+
+Históricamente en React, **todo es cliente**. El servidor envía HTML, el cliente descarga JS, hidrata, y la app se vuelve interactiva.
+
+Problemas:
+
+- Bundle de JS enorme
+- Waterfalls de datos (fetch en useEffect)
+- Duplicación de lógica servidor/cliente
+
+## El Nuevo Modelo
+
+Con RSC hay **dos tipos de componentes**:
+
+### Server Components (default)
+
+- Se ejecutan **solo en el servidor**
+- Pueden acceder directamente a DB, filesystem, APIs
+- **No envían JavaScript al cliente**
+- No tienen estado ni efectos
+
+### Client Components
+
+- Se marcan con `"use client"`
+- Se ejecutan en el navegador
+- Tienen acceso a estado, efectos, eventos del DOM
+
+```tsx
+// Server Component (default) — NO se envía JS al cliente
+import { getArticles } from "@/lib/db";
+
+export default async function ArticleList() {
+  const articles = await getArticles(); // Acceso directo a DB
+
+  return (
+    <ul>
+      {articles.map((a) => (
+        <ArticleItem key={a.id} article={a} />
+      ))}
+    </ul>
+  );
+}
+```
+
+```tsx
+// Client Component — se hidrata en el navegador
+"use client";
+
+import { useState } from "react";
+
+export function SearchBar() {
+  const [query, setQuery] = useState("");
+
+  return (
+    <input
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Buscar..."
+    />
+  );
+}
+```
+
+## Regla de Oro
+
+> Mantener los Client Components lo más abajo posible en el árbol de componentes. Elevar los Server Components lo más arriba posible.
+
+Esto minimiza el JavaScript enviado al cliente.
+
+## Composición
+
+Un Server Component **puede** renderizar un Client Component. Pero un Client Component **no puede** importar un Server Component directamente — sí puede recibirlo como `children`.
+
+```tsx
+// ✅ Esto funciona
+<ServerLayout>
+  <ClientSidebar />
+  <ServerContent />
+</ServerLayout>
+```
+
+## Reflexión
+
+RSC no es "SSR mejorado". Es un modelo completamente nuevo donde el servidor y el cliente son **ambientes de ejecución diferentes** que colaboran para renderizar una sola UI. Pensar en esto cambia cómo diseñas la arquitectura de cualquier app React moderna.

@@ -1,0 +1,68 @@
+---
+title: "Derivadas Parciales e Intuición Geométrica"
+area: math
+difficulty: 2
+concepts: [cálculo, derivadas parciales, gradiente, superficies]
+status: published
+date: "2026-02-28"
+description: "Las derivadas parciales nos dicen cómo cambia una función multivariable cuando movemos una variable a la vez."
+---
+
+# Motivación
+
+En una variable, la derivada $f'(x)$ mide la **pendiente** de la función. Pero cuando tenemos $f(x, y)$, hay infinitas direcciones en las que podemos movernos.
+
+Las derivadas parciales resuelven esto analizando **una dirección a la vez**.
+
+## Definición
+
+$$
+\frac{\partial f}{\partial x} = \lim_{h \to 0} \frac{f(x+h, y) - f(x, y)}{h}
+$$
+
+$$
+\frac{\partial f}{\partial y} = \lim_{h \to 0} \frac{f(x, y+h) - f(x, y)}{h}
+$$
+
+## Ejemplo Concreto
+
+Sea $f(x, y) = x^2 + 3xy + y^2$.
+
+$$
+\frac{\partial f}{\partial x} = 2x + 3y
+$$
+
+$$
+\frac{\partial f}{\partial y} = 3x + 2y
+$$
+
+En el punto $(1, 2)$:
+
+- $\frac{\partial f}{\partial x}(1,2) = 2(1) + 3(2) = 8$
+- $\frac{\partial f}{\partial y}(1,2) = 3(1) + 2(2) = 7$
+
+## El Gradiente
+
+El vector gradiente combina todas las derivadas parciales:
+
+$$
+\nabla f = \left( \frac{\partial f}{\partial x}, \frac{\partial f}{\partial y} \right)
+$$
+
+Este vector apunta en la **dirección de máximo crecimiento** de la función. Su magnitud es la tasa de cambio en esa dirección.
+
+> El gradiente es el concepto central de la optimización. Gradient descent simplemente sigue $-\nabla f$ para encontrar mínimos.
+
+## Conexión con Machine Learning
+
+Toda función de pérdida en ML se optimiza usando gradientes:
+
+$$
+\theta_{t+1} = \theta_t - \alpha \nabla_\theta \mathcal{L}(\theta)
+$$
+
+Donde $\alpha$ es el learning rate y $\mathcal{L}$ es la loss function.
+
+## Reflexión
+
+Las derivadas parciales son el puente entre el cálculo puro y la optimización aplicada. Entender su geometría (tangencia a superficies) hace que gradient descent deje de ser una caja negra.

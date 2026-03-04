@@ -1,0 +1,107 @@
+---
+title: "Arquitectura Hexagonal: Puertos y Adaptadores"
+area: backend
+difficulty: 4
+concepts: [hexagonal, ports, adapters, clean architecture, DDD]
+status: draft
+date: "2026-03-02"
+description: "La arquitectura hexagonal separa el dominio del negocio de la infraestructura, haciendo el sistema testeable y flexible."
+---
+
+# El Problema
+
+En aplicaciones backend típicas, la lógica de negocio se mezcla con:
+
+- Frameworks HTTP
+- Base de datos
+- Servicios externos
+- Serialización
+
+Esto hace que el sistema sea **difícil de testear** y **acoplado a la infraestructura**.
+
+## La Solución: Puertos y Adaptadores
+
+La arquitectura hexagonal (Alistair Cockburn, 2005) propone tres capas:
+
+### 1. Dominio (Centro)
+
+Lógica de negocio pura. No depende de nada externo.
+
+```typescript
+// domain/Article.ts
+export class Article {
+  constructor(
+    public readonly id: string,
+    public title: string,
+    public content: string,
+    public readonly createdAt: Date
+  ) {}
+
+  publish(): void {
+    if (!this.content.trim()) {
+      throw new Error("Cannot publish empty article");
+    }
+  }
+}
+```
+
+### 2. Puertos (Interfaces)
+
+Contratos que definen cómo el dominio se comunica con el exterior.
+
+```typescript
+// ports/ArticleRepository.ts
+export interface ArticleRepository {
+  findById(id: string): Promise<Article | null>;
+  save(article: Article): Promise<void>;
+  findAll(): Promise<Article[]>;
+}
+```
+
+### 3. Adaptadores (Implementaciones)
+
+Implementaciones concretas de los puertos.
+
+```typescript
+// adapters/PostgresArticleRepository.ts
+export class PostgresArticleRepository implements ArticleRepository {
+  constructor(private db: Pool) {}
+
+  async findById(id: string): Promise<Article | null> {
+    const result = await this.db.query(
+      "SELECT * FROM articles WHERE id = $1",
+      [id]
+    );
+    return result.rows[0] ? this.toDomain(result.rows[0]) : null;
+  }
+
+  async save(article: Article): Promise<void> {
+    await this.db.query(
+      "INSERT INTO articles (id, title, content) VALUES ($1, $2, $3) ON CONFLICT (id) DO UPDATE SET title = $2, content = $3",
+      [article.id, article.title, article.content]
+    );
+  }
+
+  // ...
+}
+```
+
+## Beneficios
+
+- **Testeable**: Mockea adaptadores fácilmente
+- **Flexible**: Cambia PostgreSQL por MongoDB sin tocar el dominio
+- **Claro**: Cada pieza tiene una responsabilidad definida
+
+## Regla de Dependencia
+
+> Las dependencias **siempre** apuntan hacia adentro. El dominio nunca conoce la infraestructura.
+
+$$
+\text{Adapters} \rightarrow \text{Ports} \rightarrow \text{Domain}
+$$
+
+Nunca al revés.
+
+## Reflexión
+
+La arquitectura hexagonal no es sobre la estructura de carpetas. Es sobre **la dirección de las dependencias**. Cuando el dominio es independiente, el sistema entero se vuelve más resiliente al cambio.
